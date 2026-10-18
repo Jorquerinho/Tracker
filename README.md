@@ -1,22 +1,19 @@
-# FC Tracker
+# FC Tracker · Tu carrera, tu legado
 
-**Tu carrera, tu legado.** Una app local en español para registrar tu Modo Carrera Jugador de EA FC.
+App en español para el Modo Carrera Jugador de EA FC, lista para GitHub Pages.
 
-- Inicio, calendario, estadísticas e historial de temporadas.
-- Importación asistida de capturas, OCR en el dispositivo y aprendizaje sencillo de escudos.
-- Datos locales y respaldos JSON; sin cuentas, bases de datos ni APIs.
-- Web estática, instalable, preparada para GitHub Pages.
+**Versión 1.2:** calendario manual con **769 clubes y sus escudos PNG incluidos**, y un desplegable de rivales que busca por nombre o alias (PSG, Man City, Barça…). Se retiró el sistema de importación por fotos.
 
-**[Lee la guía de instalación y uso](./LEEME-PRIMERO.md).**
+- Inicio, calendario, estadísticas, temporadas, premios y títulos.
+- Escudos automáticos tanto para tus rivales como para tu club.
+- Sugerencias con escudo al escribir un equipo; admite nombres personalizados.
+- Guardado en este dispositivo, respaldos JSON y exportación CSV.
+- Sin cuenta, base de datos, API ni compilación.
 
-Para publicar: sube el contenido de esta carpeta a la raíz de un repositorio y activa **Settings → Pages → Deploy from a branch → main → / (root)**. No requiere compilación ni configuración del nombre del repositorio.
+**[Guía para publicar y usar](./LEEME-PRIMERO.md)** · [Cómo actualizar y ampliar los equipos](./ACTUALIZACION-EQUIPOS.md).
 
-Para probar en tu computador con Node.js 20 o superior:
+Para probarla con Node.js 20 o superior: `npm start`. Abre `http://127.0.0.1:5173`. No necesitas instalar dependencias.
 
-```sh
-npm start
-```
+Para publicar: sube el contenido de esta carpeta a la raíz del repositorio y activa **Settings → Pages → Deploy from a branch → main → / (root)**.
 
-Abre `http://127.0.0.1:5173`. No hace falta instalar dependencias.
-
-Pruebas: `npm run check`. Consulta [VERIFICACION.md](./VERIFICACION.md) para conocer el alcance comprobado y las limitaciones de verificación.
+Pruebas: `npm run check`. Alcance de verificación: [VERIFICACION.md](./VERIFICACION.md). Créditos de imágenes: [TERCEROS.md](./TERCEROS.md).

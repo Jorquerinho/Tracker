@@ -1,53 +1,49 @@
 # Verificación de la entrega
 
-Versión: 1.0.0 · 18 de octubre de 2026.
+Versión 1.2.0 · 18 de octubre de 2026.
 
-## Comprobado
+## Resultado
 
-**23 pruebas incluidas** ejecutadas con `npm run check`, todas aprobadas:
+**27 pruebas incluidas**, ejecutadas con `npm run check`, todas aprobadas.
 
-- Jornadas por competición; inserción y eliminación intermedia; jornada manual.
-- Cierre de temporada al abrir otra y conservación del historial.
-- Filtro de oficiales, partidos pendientes excluidos y estadísticas por minutos reales.
-- Estadísticas vacías y límites numéricos.
-- Protección de competiciones con partidos.
-- Respaldo/restauración, compatibilidad con el formato del boceto y aprendizaje de escudos.
-- Rechazo de JSON ajeno, esquemas futuros, IDs inseguros, duplicados y referencias inválidas.
-- Aislamiento de los datos de demostración.
-- Extracción de fecha, competición y localía desde texto; campos desconocidos vacíos.
-- Parecido de escudos y rechazo de coincidencias ambiguas.
-- Recursos HTML, importaciones, iconos, idiomas y motor OCR incluidos.
-- Manifest y caché con una subruta arbitraria de repositorio.
-- Recuperación de la página de entrada sin conexión, mediante simulación del service worker.
+Se verificaron las reglas del calendario, jornadas e inserciones; estadísticas por competición y minutos; temporadas e historial; validación y recuperación de respaldos; datos de demostración; rutas relativas y manifest; caché sin conexión y preparación del catálogo de escudos.
 
-**23 comprobaciones adicionales de flujos en DOM simulado**, todas aprobadas:
+Las pruebas del catálogo verifican:
 
-- Carrera nueva, ficha, temporada, creación e inserción de partidos.
-- Validación de marcador y registro de actuación.
-- Vistas del calendario, búsqueda y filtros.
-- Preparación e importación de dos encuentros desde texto y bloqueo de filas incompletas.
-- Entrada, edición y salida de demo sin modificar los datos reales.
-- Premios, títulos, copia del respaldo y revisión antes de restaurar.
-- Restauración inválida sin pérdida de datos.
-- Cambio de temporada y estadísticas de toda la carrera.
-- Tratamiento de nombres como texto y protección ante cambios de otra pestaña.
+- 769 identificadores únicos y 769 archivos PNG locales, con firma PNG y dimensiones válidas.
+- Igualdad del catálogo JSON con el catálogo usado por la app.
+- Alias PSG, Paris SG, Man City, MCI, Barça, Bayern, Juve, Inter, la U y otros nombres habituales.
+- Búsqueda parcial, orden de sugerencias, límite de resultados y rivales del historial.
+- Equipos personalizados y tratamiento de nombres como texto.
+- Escudos en partidos antiguos escritos con abreviaturas, sin modificar los registros.
+- Prioridad del catálogo sobre recortes antiguos y reemplazo explícito por un escudo personal.
+- Compatibilidad de respaldos, incluidas las preferencias de imágenes personales.
+- Ausencia de los módulos de OCR, lector de cuadrícula y carpeta de dependencias del lector.
 
-**Prueba real del motor Tesseract.js 6.0.1 en Node**, con los modelos locales incluidos: reconoció dos partidos escritos en una imagen sintética, incluidos los nombres `Sevilla FC` y `Liverpool FC`, la competición `Champions League` y las palabras `Local` y `Visita` (5 comprobaciones aprobadas).
+**Los 769 PNG se decodificaron además con una biblioteca de imágenes** para comprobar su integridad. Se inspeccionaron visualmente los escudos de PSG y Manchester City, que corresponden a sus emblemas originales.
 
-También se verificó la sintaxis de los módulos de la aplicación.
+## Flujos simulados de interfaz
 
-## Límites de esta verificación
+Un DOM simulado comprobó los siguientes flujos con el código real de la aplicación:
 
-El navegador integrado bloqueó el acceso a la vista previa local. **No se realizó inspección visual en navegador, ni una prueba completa de OCR a través de la interfaz.** Los flujos de interfaz se comprobaron con un DOM simulado, que no verifica distribución visual, gestos táctiles, instalación PWA ni funciones nativas de Safari.
+- Buscar y elegir el club propio, con vista previa de su escudo.
+- Escribir PSG, elegir la sugerencia, registrar el partido y obtener su escudo en Inicio.
+- Guardar Man City sin elegir una opción y normalizar el nombre a Manchester City.
+- Buscar manch, mover la selección con flechas y usar Enter sin enviar el formulario accidentalmente.
+- Cerrar las sugerencias con Escape y abrir/cerrar con el botón del desplegable.
+- Guardar un rival desconocido y verlo después como sugerencia del historial.
+- Mostrar escudos en Calendario, sin botón de importar fotos.
+- Entrar y salir de la demo sin modificar los registros reales.
+- Parsear correctamente la hoja de estilos CSS.
 
-No se recibió una captura real del calendario del usuario. El OCR se probó con una imagen de texto controlada. La precisión con una foto del juego depende del diseño, recorte y nitidez. El aprendizaje de escudos es una comparación sencilla de firmas visuales, con revisión humana; no identifica de manera universal escudos desconocidos.
+Las comprobaciones pasaron. También se verificó la sintaxis de los módulos JavaScript y la generación del catálogo con `npm run catalogo`.
 
-La carpeta está preparada para publicación estática. **No se publicó en una cuenta de GitHub ni se verificó una dirección pública**, porque no se indicó un repositorio de destino.
+## Límites de verificación
 
-## Primera comprobación al publicarla
+La vista previa integrada quedó bloqueada en una ejecución anterior. No se realizó una nueva inspección visual de la interfaz en un navegador ni una prueba física en iPhone/Android. El DOM simulado comprueba eventos y contenido, pero no distribución visual ni gestos táctiles.
 
-1. Abre la dirección de Pages y pulsa Explorar demo. Navega por las cuatro pantallas y vuelve a tu carrera.
-2. Crea tu jugador, agrega un partido, registra la actuación y recarga: debe conservarse.
-3. Descarga un respaldo y comprueba que puedes revisarlo y restaurarlo.
-4. Importa una captura nítida del juego, corrige los campos y confirma los partidos.
-5. Para probar sin conexión, abre primero la app con conexión y completa una lectura OCR. Después vuelve a abrirla sin conexión en ese mismo navegador o instalación.
+La preparación de caché se probó mediante simulación del service worker, no desconectando un navegador real. Los fallos de descarga o falta de espacio pueden impedir completar la caché de escudos; la app avisa que están listos únicamente cuando termina la preparación completa.
+
+El catálogo es una selección de clubes y participantes históricos, no un inventario universal ni una afirmación de las ligas o temporadas actuales. La procedencia exacta de las imágenes figura en escudos/fuentes.json.
+
+No se publicó en una cuenta de GitHub ni se verificó una dirección pública porque no se indicó un repositorio de destino. La carpeta y el ZIP están preparados para alojamiento estático.

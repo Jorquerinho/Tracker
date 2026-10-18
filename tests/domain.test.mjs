@@ -1,7 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {freshState,startSeason,activeSeason,addMatch,seasonMatches,stats,filterMatches,removeCompetition,normalize,cleanStats,buildBackup,parseBackup,demoState} from '../src/domain.js';
-import {parseFixtureText,suggestBadge,badgeDistance} from '../src/ocr.js';
 function fixture(){let s=freshState();s=startSeason(s,{name:'2026/27',club:'Real Madrid',competitionIds:s.competitions.map(c=>c.id)});return s;}
 const add=(s,c=0,rival='Sevilla',before)=>addMatch(s,activeSeason(s).id,{competitionId:s.competitions[c].id,rival,homeAway:'home'},before);
 test('Jornadas independientes por competición e inserción intermedia',()=>{let s=fixture();s=add(s);s=add(s,1,'Betis');s=add(s,0,'Celta');s=add(s,0,'Barcelona',s.matches[1].id);assert.deepEqual(seasonMatches(s,activeSeason(s).id).map(m=>[m.rival,m.matchday]),[['Sevilla',1],['Barcelona',2],['Betis',1],['Celta',3]]);});
@@ -17,8 +16,4 @@ test('Rechaza referencias rotas, IDs duplicados e identificadores HTML',()=>{let
 test('Rechaza múltiples temporadas activas y partidos sin estadísticas',()=>{let s=fixture();s.seasons.push({...s.seasons[0],id:'otra'});assert.throws(()=>normalize(s));s=add(fixture());s.matches[0].status='completed';assert.throws(()=>normalize(s));});
 test('Normaliza rangos y valores ausentes sin inventar marcadores',()=>{const st=cleanStats({goals:-3,rating:100,starter:false});assert.equal(st.goals,0);assert.equal(st.rating,10);assert.equal(st.minutesPlayed,20);assert.equal(st.teamGoalsFor,null);});
 test('La demo nunca comparte objetos con una carrera nueva',()=>{const a=demoState(),b=freshState();a.player.name='Otra';assert.equal(b.player.name,'Mi jugador');assert.equal(b.matches.length,0);});
-test('OCR reconoce fecha, nombre, competición y localía explícita',()=>{const comps=[{id:'liga',name:'Liga'},{id:'copa',name:'Copa'}];const rows=parseFixtureText('2026-10-24 | Sevilla FC | Local | Liga\n28.10.2026 | Real Betis | Visita | Copa',comps);assert.deepEqual(rows.map(({source,...r})=>r),[{rival:'Sevilla FC',date:'2026-10-24',competitionId:'liga',homeAway:'home'},{rival:'Real Betis',date:'2026-10-28',competitionId:'copa',homeAway:'away'}]);});
-test('OCR no inventa una localía o competición cuando faltan',()=>{const [row]=parseFixtureText('Valencia CF',[]);assert.equal(row.homeAway,'');assert.equal(row.competitionId,'');assert.equal(row.date,'');});
-test('OCR admite marcadores H/A y nombres aprendidos',()=>{const [row]=parseFixtureText('17.09 Liverpool FC (A) Champions League',[{id:'cl',name:'Champions League'}],['Liverpool FC']);assert.equal(row.rival,'Liverpool FC');assert.equal(row.homeAway,'away');assert.equal(row.date,'17.09');});
-test('Escudos: igualdad y rechazo de sugerencias ambiguas',()=>{const vector=Array(192).fill(80);assert.equal(badgeDistance(vector,vector),0);assert.equal(suggestBadge(vector,[{name:'Sevilla',vector}]),'Sevilla');assert.equal(suggestBadge(vector,[{name:'Sevilla',vector},{name:'Otro',vector}]),'');assert.equal(suggestBadge(Array(192).fill(250),[{name:'Sevilla',vector}]),'');});
 test('Añadir partido no muta el estado original',()=>{const s=fixture();const next=add(s);assert.equal(s.matches.length,0);assert.equal(next.matches.length,1);});

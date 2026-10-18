@@ -3,7 +3,17 @@ export const uid = () => globalThis.crypto?.randomUUID?.() || `id-${Date.now().t
 export const today = () => {const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;};
 const num=(v,min,max,fallback=0)=>Number.isFinite(Number(v))?Math.max(min,Math.min(max,Number(v))):fallback;
 const str=(v,max=160)=>typeof v==='string'?v.trim().slice(0,max):'';
-export function freshState(){return {schemaVersion:1,player:{name:'Mi jugador',club:'',position:'MC',overall:65,number:10},competitions:[['Liga',true],['Copa',true],['Champions League',true],['Pretemporada',false],['Amistoso',false]].map(([name,official])=>({id:uid(),name,official})),seasons:[],matches:[],badgeTemplates:[],settings:{lastBackupAt:null}};}
+export const clubKey=name=>String(name||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim().toLowerCase().replace(/\s+/g,' ');
+export const validBadgeImage=image=>typeof image==='string'&&image.length<=96000&&/^data:image\/(?:png|jpeg|webp);base64,[A-Za-z0-9+/]+={0,2}$/.test(image);
+export function setClubBadge(state,name,image){
+  if(!name?.trim()||!validBadgeImage(image))throw new Error('Elige un escudo PNG, JPG o WebP válido.');
+  const existing=state.clubBadges||[],key=clubKey(name);
+  if(!existing.some(b=>clubKey(b.name)===key)&&existing.length>=200)throw new Error('La biblioteca admite hasta 200 clubes. Elimina un escudo antes de añadir otro.');
+  const library=[...existing.filter(b=>clubKey(b.name)!==key),{name:name.trim().slice(0,160),image,preferred:true}];
+  if(library.reduce((n,b)=>n+b.image.length,0)>4*1024*1024)throw new Error('La biblioteca de escudos llegó a 4 MB. Quita algunas imágenes antes de añadir otra.');
+  return {...state,clubBadges:library};
+}
+export function freshState(){return {schemaVersion:1,player:{name:'Mi jugador',club:'',position:'MC',overall:65,number:10},competitions:[['Liga',true],['Copa',true],['Champions League',true],['Pretemporada',false],['Amistoso',false]].map(([name,official])=>({id:uid(),name,official})),seasons:[],matches:[],badgeTemplates:[],clubBadges:[],settings:{lastBackupAt:null}};}
 export function normalize(data){
   const fail=()=>{throw new Error('El respaldo contiene datos incompletos o referencias inválidas.');};
   if(!data||typeof data!=='object'||Array.isArray(data)||!data.player||!Array.isArray(data.seasons)||!Array.isArray(data.matches)||!Array.isArray(data.competitions))fail();
@@ -28,7 +38,11 @@ export function normalize(data){
     return {id:validId(m.id),seasonId:m.seasonId,competitionId:m.competitionId,rival:str(m.rival),homeAway:m.homeAway,date:str(m.date),order:num(m.order,0,100000),matchdayOverride:m.matchdayOverride?Math.floor(num(m.matchdayOverride,1,999)):null,status:m.status,stats:m.status==='completed'?cleanStats(m.stats):null};
   });
   const badgeTemplates=(Array.isArray(data.badgeTemplates)?data.badgeTemplates:[]).slice(0,200).filter(b=>b&&str(b.name)&&Array.isArray(b.vector)&&b.vector.length===192&&b.vector.every(n=>Number.isFinite(n)&&n>=0&&n<=255)).map(b=>({name:str(b.name),vector:b.vector}));
-  return {schemaVersion:1,player:{name:str(data.player.name)||'Mi jugador',club:str(data.player.club),position:str(data.player.position,12)||'MC',overall:Math.floor(num(data.player.overall,1,99,65)),number:Math.floor(num(data.player.number,1,99,10))},competitions,seasons,matches,badgeTemplates,settings:{lastBackupAt:typeof data.settings?.lastBackupAt==='string'&&!isNaN(Date.parse(data.settings.lastBackupAt))?data.settings.lastBackupAt:null}};
+  if(data.clubBadges!=null&&(!Array.isArray(data.clubBadges)||data.clubBadges.length>200))fail();
+  const badgeKeys=new Set();
+  const clubBadges=(data.clubBadges||[]).map(b=>{if(!b||!str(b.name)||!validBadgeImage(b.image)||badgeKeys.has(clubKey(b.name)))fail();badgeKeys.add(clubKey(b.name));return {name:str(b.name),image:b.image,preferred:b.preferred===true};});
+  if(clubBadges.reduce((n,b)=>n+b.image.length,0)>4*1024*1024)fail();
+  return {schemaVersion:1,player:{name:str(data.player.name)||'Mi jugador',club:str(data.player.club),position:str(data.player.position,12)||'MC',overall:Math.floor(num(data.player.overall,1,99,65)),number:Math.floor(num(data.player.number,1,99,10))},competitions,seasons,matches,badgeTemplates,clubBadges,settings:{lastBackupAt:typeof data.settings?.lastBackupAt==='string'&&!isNaN(Date.parse(data.settings.lastBackupAt))?data.settings.lastBackupAt:null}};
 }
 export function cleanStats(s){return {goals:Math.floor(num(s.goals,0,99)),assists:Math.floor(num(s.assists,0,99)),rating:num(s.rating,0,10),minutesPlayed:Math.floor(num(s.minutesPlayed??(s.starter===false?20:90),0,150)),starter:s.starter!==false,motm:!!s.motm,teamGoalsFor:s.teamGoalsFor==null||s.teamGoalsFor===''?null:Math.floor(num(s.teamGoalsFor,0,99)),teamGoalsAgainst:s.teamGoalsAgainst==null||s.teamGoalsAgainst===''?null:Math.floor(num(s.teamGoalsAgainst,0,99))};}
 export const activeSeason=s=>s.seasons.find(se=>se.status==='active');

@@ -8,7 +8,7 @@ test('Todos los recursos HTML y módulos existen y usan rutas relativas',async()
   const resources=[...html.matchAll(/(?:src|href)="(\.\/[^"#]+)"/g)].map(m=>m[1]);
   for(const file of resources)assert.ok((await stat(new URL(file,root))).size>0,file);
   assert.ok(!/(?:src|href)="\//.test(html));
-  for(const file of ['src/app.js','src/ui.js','src/ocr.js','src/domain.js']){
+  for(const file of ['src/app.js','src/ui.js','src/images.js','src/domain.js']){
     const url=new URL(file,root),text=await readFile(url,'utf8');
     for(const m of text.matchAll(/from\s*['"](\.\.?\/[^'"]+)['"]/g))await stat(new URL(m[1],url));
   }
@@ -17,10 +17,6 @@ test('Manifest conserva rutas relativas y los dos iconos existen',async()=>{
   const manifest=JSON.parse(await readFile(new URL('manifest.webmanifest',root),'utf8'));
   assert.equal(manifest.start_url,'./');assert.equal(manifest.scope,'./');assert.equal(manifest.display,'standalone');
   for(const icon of manifest.icons){const bytes=await readFile(new URL(icon.src,root));assert.equal(bytes.subarray(1,4).toString(),'PNG');}
-});
-test('El OCR y ambos idiomas están incluidos, sin depender de CDN',async()=>{
-  for(const file of ['tesseract.min.js','worker.min.js','eng.traineddata.gz','spa.traineddata.gz','tesseract-core.wasm.js','tesseract-core-simd.wasm.js','tesseract-core-lstm.wasm.js','tesseract-core-simd-lstm.wasm.js'])assert.ok((await stat(new URL('vendor/'+file,root))).size>10000,file);
-  const text=await readFile(new URL('src/ocr.js',root),'utf8');assert.ok(!text.includes('https://'));
 });
 test('Service worker instala los recursos correctos en un repositorio con subruta',async()=>{
   const listeners={};let installed=[];let deleted=[];let claimed=false;
@@ -39,4 +35,14 @@ test('Service worker recupera la página de entrada cuando no hay conexión',asy
   vm.runInNewContext(await readFile(new URL('sw.js',root),'utf8'),context);
   let response;listeners.fetch({request:{method:'GET',url:'https://ejemplo.github.io/app/',mode:'navigate'},respondWith:p=>response=p});
   assert.equal(await response,offlineResponse);assert.equal(requested,'https://ejemplo.github.io/app/index.html');
+});
+test('Service worker prepara los escudos desde el catálogo local y confirma al terminar',async()=>{
+  const base='https://ejemplo.github.io/mi-repo/',listeners={},fetched=[],messages=[],store=new Map();
+  store.set(base+'escudos/catalogo.json',{json:async()=>[{crest:'escudos/paris-saint-germain.png'},{crest:'escudos/manchester-city.png'}]});
+  const cache={match:async key=>store.get(key),put:async(key,value)=>store.set(key,value)};
+  let claimed=false;
+  const context={URL,fetch:async url=>{fetched.push(url);return {ok:true,kind:'png'};},caches:{open:async()=>cache,keys:async()=>[],delete:async()=>true},self:{registration:{scope:base},location:{origin:'https://ejemplo.github.io'},addEventListener:(event,fn)=>listeners[event]=fn,clients:{claim:async()=>{claimed=true;},matchAll:async()=>[{postMessage:message=>messages.push(message)}]}}};
+  vm.runInNewContext(await readFile(new URL('sw.js',root),'utf8'),context);
+  let pending;listeners.activate({waitUntil:p=>pending=p});await pending;
+  assert.equal(claimed,true);assert.deepEqual(fetched,[base+'escudos/paris-saint-germain.png',base+'escudos/manchester-city.png']);assert.equal(messages[0].type,'crests-ready');assert.equal(messages[0].total,2);
 });
