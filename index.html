@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#10130f">
+  <meta name="description" content="Tu centro de control para el Modo Carrera Jugador. Calendario, estadísticas y recuerdos, guardados en tu dispositivo.">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="FC Tracker">
+  <link rel="icon" href="./assets/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="./assets/icon-192.png">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="stylesheet" href="./src/style.css">
+  <title>FC Tracker · Tu carrera, tu legado</title>
+</head>
+<body>
+  <script>if(location.protocol==='file:'){document.write('<div style="padding:36px;font:16px/1.8 system-ui;color:#eef5e6"><h1>FC Tracker</h1><p>Para abrir esta app, publícala en GitHub Pages o ejecuta <b>npm start</b> en la carpeta del proyecto y abre <b>http://127.0.0.1:5173</b>.</p><p>Encontrarás los pasos en <b>LEEME-PRIMERO.md</b>.</p></div>');}</script>
+  <div id="app"></div>
+  <dialog id="modal" aria-labelledby="modal-title"></dialog>
+  <div id="toasts" role="status" aria-live="polite"></div>
+  <noscript>Activa JavaScript para usar FC Tracker. Tus datos se guardan en este navegador.</noscript>
+  <script type="module" src="./src/app.js"></script>
+</body>
+</html>
